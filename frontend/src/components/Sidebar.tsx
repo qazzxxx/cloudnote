@@ -10,9 +10,11 @@ interface SidebarProps {
   files: FileNode[];
   onSelect: (path: string) => void;
   onRefresh: () => void;
+  isDarkMode?: boolean;
+  borderColor?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh }) => {
+const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMode, borderColor }) => {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   
@@ -188,8 +190,18 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh }) => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#fcfcfc' }}>
-      <div className="sidebar-logo" style={{ fontSize: '16px', fontWeight: '600', color: '#333', display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: isDarkMode ? '#1f1f1f' : '#fcfcfc', color: isDarkMode ? '#fff' : 'inherit' }}>
+      <div className="sidebar-logo" style={{ 
+          height: '64px',
+          padding: '0 20px', 
+          fontSize: '16px', 
+          fontWeight: '600', 
+          color: isDarkMode ? '#fff' : '#333', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '12px', 
+          borderBottom: borderColor ? `1px solid ${borderColor}` : (isDarkMode ? '1px solid #424242' : '1px solid rgba(0,0,0,0.06)') 
+      }}>
         <CloudOutlined style={{ color: '#1890ff', fontSize: '20px' }} />
         <span style={{ letterSpacing: '0.5px' }}>CloudNote</span>
       </div>
@@ -203,6 +215,7 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh }) => {
             onSelect={handleSelect}
             onContextMenu={onContextMenu}
             onDrop={onDrop}
+            isDarkMode={isDarkMode}
         />
       </div>
 

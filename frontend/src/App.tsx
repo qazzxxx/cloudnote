@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Layout, message, Input, Spin } from 'antd';
+import { Layout, message, Input, Spin, Button, theme, ConfigProvider } from 'antd';
+import { BulbOutlined, BulbFilled } from '@ant-design/icons';
 import Sidebar from './components/Sidebar';
 import Editor from './components/Editor';
 import Login from './components/Login';
@@ -15,6 +16,17 @@ const App: React.FC = () => {
   const [files, setFiles] = useState<FileNode[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>('');
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
+
+  const { defaultAlgorithm, darkAlgorithm } = theme;
+
+  const toggleTheme = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme', newMode ? 'dark' : 'light');
+  };
 
   const fetchFiles = useCallback(async () => {
     try {
@@ -114,15 +126,37 @@ const App: React.FC = () => {
       }} />;
   }
 
+  const bgStyle = isDarkMode ? { background: '#141414', color: '#fff' } : { background: '#fff', color: '#000' };
+  const borderColor = isDarkMode ? 'rgba(253, 253, 253, 0.12)' : 'rgba(5, 5, 5, 0.06)';
+  const siderStyle = isDarkMode ? { background: '#1f1f1f', borderRight: `1px solid ${borderColor}` } : { background: '#fcfcfc', borderRight: `1px solid ${borderColor}` };
+
   return (
-    <Layout style={{ height: '100vh' }}>
-      <Layout>
-        <Sider width={300} theme="light" style={{ borderRight: '1px solid #f0f0f0', background: '#fcfcfc' }}>
-          <Sidebar files={files} onSelect={setSelectedFile} onRefresh={fetchFiles} />
+    <ConfigProvider
+      theme={{
+        algorithm: isDarkMode ? darkAlgorithm : defaultAlgorithm,
+        token: {
+            colorPrimary: '#1890ff',
+            colorBgContainer: isDarkMode ? '#1f1f1f' : '#ffffff',
+        }
+      }}
+    >
+    <Layout style={{ height: '100vh', ...bgStyle }}>
+      <Layout style={bgStyle}>
+        <Sider width={300} theme={isDarkMode ? 'dark' : 'light'} style={siderStyle}>
+          <Sidebar files={files} onSelect={setSelectedFile} onRefresh={fetchFiles} isDarkMode={isDarkMode} borderColor={borderColor} />
         </Sider>
-        <Content style={{ background: '#fff', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        <Content style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', ...bgStyle }}>
           {selectedFile && (
-              <div style={{ padding: '10px 20px', borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
+              <div style={{ 
+                  height: '64px',
+                  padding: '0 20px', 
+                  borderBottom: `1px solid ${borderColor}`, 
+                  flexShrink: 0, 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  background: isDarkMode ? '#1f1f1f' : '#fff' // Match header bg
+              }}>
                   <Input 
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
@@ -131,16 +165,32 @@ const App: React.FC = () => {
                         (e.target as HTMLInputElement).blur();
                     }}
                     variant="borderless"
-                    style={{ fontSize: '24px', fontWeight: 'bold', padding: 0 }}
+                    style={{ fontSize: '20px', fontWeight: 'bold', padding: 0, flex: 1, color: isDarkMode ? '#fff' : '#000' }}
+                  />
+                  <Button 
+                    type="text" 
+                    icon={isDarkMode ? <BulbFilled style={{ color: '#FFC857' }} /> : <BulbOutlined />} 
+                    onClick={toggleTheme}
+                    style={{ marginLeft: '10px' }}
                   />
               </div>
           )}
+          {!selectedFile && (
+             <div style={{ position: 'absolute', top: 20, right: 20 }}>
+                <Button 
+                    type="text" 
+                    icon={isDarkMode ? <BulbFilled style={{ color: '#FFC857' }} /> : <BulbOutlined />} 
+                    onClick={toggleTheme}
+                />
+             </div>
+          )}
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <Editor filePath={selectedFile} />
+            <Editor filePath={selectedFile} isDarkMode={isDarkMode} />
           </div>
         </Content>
       </Layout>
     </Layout>
+    </ConfigProvider>
   );
 };
 

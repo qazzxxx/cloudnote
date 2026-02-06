@@ -65,28 +65,8 @@
   transition: all 0.2s !important;
 }
 
-.ant-tree .ant-tree-node-content-wrapper:hover {
-  background-color: #f0f0f0 !important;
-}
-
-.ant-tree .ant-tree-node-selected .ant-tree-node-content-wrapper {
-  background-color: #e6f7ff !important;
-  color: #1890ff !important;
-}
-
-.ant-tree .ant-tree-switcher {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.ant-layout-sider {
-  background: #fcfcfc !important;
-  border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
-}
-
 /* Sidebar Logo Area */
 .sidebar-logo {
   transition: all 0.3s;
-  background: linear-gradient(to right, #ffffff, #fcfcfc);
+  /* background removed to support dark mode */
 }

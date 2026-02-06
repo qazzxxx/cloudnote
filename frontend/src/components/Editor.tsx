@@ -9,9 +9,10 @@ import { message, Spin } from 'antd';
 
 interface EditorProps {
   filePath: string | null;
+  isDarkMode?: boolean;
 }
 
-const Editor: React.FC<EditorProps> = ({ filePath }) => {
+const Editor: React.FC<EditorProps> = ({ filePath, isDarkMode }) => {
   const [loading, setLoading] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -19,6 +20,12 @@ const Editor: React.FC<EditorProps> = ({ filePath }) => {
     dictionary: locales.zh,
     uploadFile: uploadFile,
   });
+
+  useEffect(() => {
+      // Toggle theme
+      // BlockNote doesn't support dynamic theme change easily via hook props update?
+      // Actually BlockNoteView supports theme prop.
+  }, [isDarkMode]);
 
   // Load content when filePath changes
   useEffect(() => {
@@ -142,11 +149,11 @@ const Editor: React.FC<EditorProps> = ({ filePath }) => {
   }
 
   return (
-    <div style={{ height: '100%', width: '100%', overflowY: 'auto', padding: '16px' }}>
+    <div style={{ height: '100%', width: '100%', overflowY: 'auto', padding: '16px', background: isDarkMode ? '#141414' : '#fff' }}>
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Spin /></div>
       ) : (
-        <BlockNoteView editor={editor} theme="light" />
+        <BlockNoteView editor={editor} theme={isDarkMode ? "dark" : "light"} />
       )}
     </div>
   );

@@ -11,6 +11,7 @@ interface FileTreeNodeProps {
   onSelect: (path: string) => void;
   onContextMenu: (e: React.MouseEvent, node: FileNode) => void;
   onDrop: (dragNodeKey: string, targetNodeKey: string) => void;
+  isDarkMode?: boolean;
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({
@@ -21,7 +22,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   onExpand,
   onSelect,
   onContextMenu,
-  onDrop
+  onDrop,
+  isDarkMode
 }) => {
   const isExpanded = expandedKeys.has(node.key);
   const isSelected = selectedPath === node.key;
@@ -58,8 +60,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   return (
     <div>
       <div
-        className={`file-tree-node ${isSelected ? 'selected' : ''}`}
-        style={{ paddingLeft: `${depth * 24 + 12}px` }} // Increased indentation
+        className={`file-tree-node ${isSelected ? 'selected' : ''} ${isDarkMode ? 'dark-mode' : ''}`}
+        style={{ paddingLeft: `${depth * 24 + 12}px` }}
         onClick={() => {
           if (!node.isLeaf) {
             onExpand(node.key);
@@ -96,6 +98,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               onSelect={onSelect}
               onContextMenu={onContextMenu}
               onDrop={onDrop}
+              isDarkMode={isDarkMode}
             />
           ))}
         </div>

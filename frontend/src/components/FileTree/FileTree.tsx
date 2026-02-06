@@ -11,6 +11,7 @@ interface FileTreeProps {
   onSelect: (path: string) => void;
   onContextMenu: (e: React.MouseEvent, node: FileNode | null) => void;
   onDrop: (dragNodeKey: string, targetNodeKey: string) => void;
+  isDarkMode?: boolean;
 }
 
 const FileTree: React.FC<FileTreeProps> = ({
@@ -20,7 +21,8 @@ const FileTree: React.FC<FileTreeProps> = ({
   onExpand,
   onSelect,
   onContextMenu,
-  onDrop
+  onDrop,
+  isDarkMode
 }) => {
   return (
     <div 
@@ -43,6 +45,7 @@ const FileTree: React.FC<FileTreeProps> = ({
           onSelect={onSelect}
           onContextMenu={onContextMenu}
           onDrop={onDrop}
+          isDarkMode={isDarkMode}
         />
       ))}
     </div>

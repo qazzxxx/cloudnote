@@ -20,6 +20,25 @@
   border: 2px solid transparent; /* Reserve space for border */
 }
 
+.file-tree-node.dark-mode {
+  color: #d1d5db;
+}
+
+.file-tree-node.dark-mode:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #f3f4f6;
+}
+
+.file-tree-node.dark-mode.selected {
+  background-color: #111d2c;
+  color: #177ddc;
+}
+
+.file-tree-node.dark-mode.drag-over {
+  background-color: #111d2c;
+  border-color: #177ddc;
+}
+
 .file-tree-node:hover {
   background-color: rgba(0, 0, 0, 0.04);
   color: #111827;

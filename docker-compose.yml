@@ -2,13 +2,12 @@ version: '3.8'
 
 services:
   cloudnote:
-    build: .
-    image: cloudnote:latest
+    image: qazzxxx/cloudnote:latest
     container_name: cloudnote
     ports:
-      - "3000:3000"
+      - "6631:3000"
     environment:
-      - PASSWORD=${PASSWORD:-admin123} # Optional: Set a password to protect the application
+      - PASSWORD=123456
       - DATA_DIR=/app/data
     volumes:
       - ./data:/app/data
