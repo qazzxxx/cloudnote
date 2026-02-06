@@ -149,7 +149,7 @@ const Editor: React.FC<EditorProps> = ({ filePath, isDarkMode }) => {
   }
 
   return (
-    <div style={{ height: '100%', width: '100%', overflowY: 'auto', padding: '16px', background: isDarkMode ? '#141414' : '#fff' }}>
+    <div style={{ height: '100%', width: '100%', overflowY: 'auto', padding: '16px', background: isDarkMode ? 'rgb(31 31 31)' : '#fff' }}>
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Spin /></div>
       ) : (
