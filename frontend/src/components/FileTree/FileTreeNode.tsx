@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileOutlined, FolderFilled, FolderOpenFilled } from '@ant-design/icons';
+import { FileMarkdownOutlined, FolderFilled, FolderOpenFilled } from '@ant-design/icons';
 import type { FileNode } from '../../api';
 
 interface FileTreeNodeProps {
@@ -76,7 +76,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
       >
         <span className="file-tree-icon">
           {node.isLeaf ? (
-            <FileOutlined />
+            <FileMarkdownOutlined style={{ color: '#1890ff' }} />
           ) : (
             isExpanded ? <FolderOpenFilled style={{ color: '#FFC857' }} /> : <FolderFilled style={{ color: '#FFD666' }} />
           )}

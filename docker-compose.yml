@@ -7,6 +7,9 @@ services:
     container_name: cloudnote
     ports:
       - "3000:3000"
+    environment:
+      - PASSWORD=${PASSWORD:-admin123} # Optional: Set a password to protect the application
+      - DATA_DIR=/app/data
     volumes:
       - ./data:/app/data
     restart: unless-stopped

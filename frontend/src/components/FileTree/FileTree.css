@@ -17,6 +17,7 @@
   font-size: 15px;
   font-weight: 500;
   line-height: 1.5;
+  border: 2px solid transparent; /* Reserve space for border */
 }
 
 .file-tree-node:hover {
@@ -31,8 +32,8 @@
 
 .file-tree-node.drag-over {
   background-color: #f0f9ff;
-  border: 2px dashed #1890ff;
-  margin: -1px 3px 1px 3px; /* Compensate border */
+  border-color: #1890ff;
+  border-style: dashed;
 }
 
 .file-tree-icon {
