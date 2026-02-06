@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  cloudnote:
+    build: .
+    image: cloudnote:latest
+    container_name: cloudnote
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

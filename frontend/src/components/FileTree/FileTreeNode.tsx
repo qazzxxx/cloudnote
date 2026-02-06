@@ -1,0 +1,107 @@
+import React from 'react';
+import { FileOutlined, FolderFilled, FolderOpenFilled } from '@ant-design/icons';
+import type { FileNode } from '../../api';
+
+interface FileTreeNodeProps {
+  node: FileNode;
+  depth: number;
+  expandedKeys: Set<string>;
+  selectedPath: string | null;
+  onExpand: (key: string) => void;
+  onSelect: (path: string) => void;
+  onContextMenu: (e: React.MouseEvent, node: FileNode) => void;
+  onDrop: (dragNodeKey: string, targetNodeKey: string) => void;
+}
+
+const FileTreeNode: React.FC<FileTreeNodeProps> = ({
+  node,
+  depth,
+  expandedKeys,
+  selectedPath,
+  onExpand,
+  onSelect,
+  onContextMenu,
+  onDrop
+}) => {
+  const isExpanded = expandedKeys.has(node.key);
+  const isSelected = selectedPath === node.key;
+
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', node.key);
+    e.dataTransfer.effectAllowed = 'move';
+    // Add a custom drag image or styling if needed
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent bubbling
+    e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('drag-over');
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('drag-over');
+    const dragKey = e.dataTransfer.getData('text/plain');
+    if (dragKey) {
+        onDrop(dragKey, node.key);
+    }
+  };
+
+  return (
+    <div>
+      <div
+        className={`file-tree-node ${isSelected ? 'selected' : ''}`}
+        style={{ paddingLeft: `${depth * 24 + 12}px` }} // Increased indentation
+        onClick={() => {
+          if (!node.isLeaf) {
+            onExpand(node.key);
+          } else {
+            onSelect(node.key);
+          }
+        }}
+        onContextMenu={(e) => onContextMenu(e, node)}
+        draggable
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <span className="file-tree-icon">
+          {node.isLeaf ? (
+            <FileOutlined />
+          ) : (
+            isExpanded ? <FolderOpenFilled style={{ color: '#FFC857' }} /> : <FolderFilled style={{ color: '#FFD666' }} />
+          )}
+        </span>
+        <span className="file-tree-title">{node.title.replace(/\.md$/, '')}</span>
+      </div>
+      {node.children && isExpanded && (
+        <div>
+          {node.children.map((child) => (
+            <FileTreeNode
+              key={child.key}
+              node={child}
+              depth={depth + 1}
+              expandedKeys={expandedKeys}
+              selectedPath={selectedPath}
+              onExpand={onExpand}
+              onSelect={onSelect}
+              onContextMenu={onContextMenu}
+              onDrop={onDrop}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FileTreeNode;
