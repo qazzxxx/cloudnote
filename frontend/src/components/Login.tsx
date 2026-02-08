@@ -61,7 +61,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             letterSpacing: '2px',
             fontWeight: '300'
           }}>
-            墨染云间，书尽简意
+            执笔云上，简笔流年
           </div>
         </div>
 
