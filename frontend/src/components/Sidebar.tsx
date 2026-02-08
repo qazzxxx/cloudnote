@@ -320,13 +320,14 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
         color: isDarkMode ? '#fff' : '#333',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: '12px',
         borderBottom: borderColor ? `1px solid ${borderColor}` : (isDarkMode ? '1px solid #424242' : '1px solid rgba(0,0,0,0.06)'),
         overflow: 'hidden',
         whiteSpace: 'nowrap'
       }}>
         <img src="/logo.svg" alt="Logo" style={{ width: '32px', height: '32px', flexShrink: 0 }} />
-        <span style={{ letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis' }}>云简 - 墨染云间，书尽简意</span>
+        <span style={{ fontSize: '24px', letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis' }}>云简</span>
       </div>
 
       <div style={{ flex: 1, overflow: 'hidden' }}>
