@@ -12,9 +12,10 @@ interface SidebarProps {
   onRefresh: () => void;
   isDarkMode?: boolean;
   borderColor?: string;
+  onMoveFile?: (oldPath: string, newPath: string) => Promise<void>;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMode, borderColor }) => {
+const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMode, borderColor, onMoveFile }) => {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   
@@ -97,6 +98,11 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
     const newPath = targetParentPath ? `${targetParentPath}/${dragFileName}` : dragFileName;
     
     try {
+        // Pre-move hook to handle save state
+        if (onMoveFile) {
+            await onMoveFile(dragKey, newPath as string);
+        }
+
         await moveFile(dragKey, newPath as string);
         message.success('移动成功');
         onRefresh();
@@ -106,8 +112,17 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
              newExpanded.add(dropKey);
              setExpandedKeys(newExpanded);
         }
-    } catch (e) {
-        message.error('移动失败');
+    } catch (e: any) {
+        // Suppress destination exists error since we are moving
+        if (e.response?.data?.error === 'Destination already exists') {
+             // If destination exists, maybe we can ignore it or show error.
+             // But the user issue is "creates a new identical file".
+             // This suggests that onDrop is called multiple times or logic is flawed.
+             // Let's debounce or prevent multi-calls.
+             message.error('目标位置已存在同名文件');
+        } else {
+             message.error('移动失败');
+        }
     }
   };
 

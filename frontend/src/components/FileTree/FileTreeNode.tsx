@@ -29,8 +29,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   const isSelected = selectedPath === node.key;
 
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('text/plain', node.key);
-    e.dataTransfer.effectAllowed = 'move';
+    // Do NOT set text/plain to avoid rich text editors (like BlockNote) capturing it as text insertion
+    // e.dataTransfer.setData('text/plain', node.key); 
+    e.dataTransfer.setData('application/x-cloudnote-file', JSON.stringify(node));
+    e.dataTransfer.effectAllowed = 'all';
     // Add a custom drag image or styling if needed
   };
 
@@ -51,10 +53,21 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.classList.remove('drag-over');
-    const dragKey = e.dataTransfer.getData('text/plain');
-    if (dragKey) {
-        onDrop(dragKey, node.key);
+    
+    // Check if it's our custom file drag
+    const cloudNoteData = e.dataTransfer.getData('application/x-cloudnote-file');
+    if (cloudNoteData) {
+        try {
+            const dragNode = JSON.parse(cloudNoteData);
+            const dragKey = dragNode.key;
+            if (dragKey && dragKey !== node.key) {
+                onDrop(dragKey, node.key);
+            }
+        } catch (err) {
+            console.error('Failed to parse drag data', err);
+        }
     }
+    // If no custom data, it might be external file or something else, ignore it here
   };
 
   return (

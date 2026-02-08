@@ -2,8 +2,14 @@ import express from 'express';
 import fs from 'fs-extra';
 import path from 'path';
 import multer from 'multer';
+import DiffMatchPatch from 'diff-match-patch';
+import crypto from 'crypto';
 
 const router = express.Router();
+const dmp = new DiffMatchPatch();
+
+// Helper to calculate MD5
+const md5 = (text: string) => crypto.createHash('md5').update(text).digest('hex');
 
 // Define data directory
 const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, '../../data');
@@ -107,7 +113,8 @@ router.get('/content', async (req, res) => {
     if (!await fs.pathExists(fullPath)) return res.status(404).json({ error: 'File not found' });
     
     const content = await fs.readFile(fullPath, 'utf-8');
-    res.json({ content });
+    const stats = await fs.stat(fullPath);
+    res.json({ content, lastModified: stats.mtimeMs, checksum: md5(content) });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -142,10 +149,54 @@ router.put('/', async (req, res) => {
     
     const fullPath = getSafePath(reqPath);
     await fs.writeFile(fullPath, content || '');
+    const stats = await fs.stat(fullPath);
     
-    res.json({ success: true });
+    res.json({ success: true, lastModified: stats.mtimeMs, checksum: md5(content || '') });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// PATCH /api/files - Patch file content
+router.patch('/', async (req, res) => {
+  try {
+    const { path: reqPath, patch, checksum } = req.body;
+    if (!reqPath || typeof patch !== 'string' || !checksum) {
+        return res.status(400).json({ error: 'Path, patch and checksum are required' });
+    }
+    
+    // Sometimes patch can be empty string if only whitespace changed or something weird, but dmp usually produces something.
+    // However, req.body.patch might be undefined if not sent.
+    // Let's ensure strict check.
+    
+    const fullPath = getSafePath(reqPath);
+    if (!await fs.pathExists(fullPath)) return res.status(404).json({ error: 'File not found' });
+    
+    const currentContent = await fs.readFile(fullPath, 'utf-8');
+    
+    // Check checksum
+    if (md5(currentContent) !== checksum) {
+        return res.status(409).json({ error: 'Version mismatch', currentContent });
+    }
+    
+    // Apply patch
+    const patches = dmp.patch_fromText(patch);
+    const [newText, results] = dmp.patch_apply(patches, currentContent);
+    
+    // Check if patch applied successfully
+    // results is array of booleans
+    const success = results.every(s => s);
+    if (!success) {
+        return res.status(422).json({ error: 'Patch failed to apply cleanly', currentContent });
+    }
+    
+    await fs.writeFile(fullPath, newText);
+    const stats = await fs.stat(fullPath);
+    
+    res.json({ success: true, lastModified: stats.mtimeMs, checksum: md5(newText) });
+    
+  } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
   }
 });
 

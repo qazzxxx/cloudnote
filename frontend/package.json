@@ -16,12 +16,18 @@
     "@blocknote/react": "^0.46.2",
     "antd": "^6.2.3",
     "axios": "^1.13.4",
+    "diff-match-patch": "^1.0.5",
+    "localforage": "^1.10.0",
+    "md5": "^2.3.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/diff-match-patch": "^1.0.36",
+    "@types/localforage": "^0.0.33",
+    "@types/md5": "^2.3.6",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",

@@ -48,12 +48,12 @@ export const getFiles = async () => {
 };
 
 export const getFileContent = async (path: string) => {
-  const response = await api.get<{ content: string }>('/files/content', { 
+  const response = await api.get<{ content: string; lastModified?: number; checksum?: string }>('/files/content', { 
     params: { path },
     // Prevent caching
     headers: { 'Cache-Control': 'no-cache' }
   });
-  return response.data.content;
+  return response.data;
 };
 
 export const createFile = async (path: string, type: 'file' | 'folder') => {
@@ -61,7 +61,13 @@ export const createFile = async (path: string, type: 'file' | 'folder') => {
 };
 
 export const updateFile = async (path: string, content: string) => {
-  await api.put('/files', { path, content });
+  const response = await api.put<{ success: boolean; lastModified: number; checksum: string }>('/files', { path, content });
+  return response.data;
+};
+
+export const patchFile = async (path: string, patch: string, checksum: string) => {
+  const response = await api.patch<{ success: boolean; lastModified: number; checksum: string }>('/files', { path, patch, checksum });
+  return response.data;
 };
 
 export const deleteFile = async (path: string) => {

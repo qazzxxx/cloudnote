@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Layout, message, Input, Spin, Button, theme, ConfigProvider } from 'antd';
 import { BulbOutlined, BulbFilled } from '@ant-design/icons';
 import Sidebar from './components/Sidebar';
-import Editor from './components/Editor';
+import Editor, { type EditorRef } from './components/Editor';
 import Login from './components/Login';
 import { getFiles, renameFile, getAuthStatus } from './api';
+import { StorageService } from './services/StorageService';
 import type { FileNode } from './api';
 import './App.css';
 
@@ -19,6 +20,8 @@ const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
   });
+  
+  const editorRef = useRef<EditorRef>(null);
 
   const { defaultAlgorithm, darkAlgorithm } = theme;
 
@@ -115,6 +118,31 @@ const App: React.FC = () => {
       }
   };
 
+  const handleMoveFile = useCallback(async (oldPath: string, newPath: string) => {
+      try {
+          // If the moved file is currently open, we need to handle the state
+          const isCurrentFile = oldPath === selectedFile;
+          
+          if (isCurrentFile && editorRef.current) {
+              // 1. Force save current content
+              await editorRef.current.forceSave();
+          } else {
+              // If not open, check if we have draft for it and move it too
+              await StorageService.moveDraft(oldPath, newPath);
+          }
+          
+          // 2. Refresh files list happens in Sidebar, but we need to update selectedFile if needed
+          if (isCurrentFile) {
+              setSelectedFile(newPath);
+              // Also update filename display
+              const name = newPath.split('/').pop() || '';
+              setFileName(name.replace(/\.md$/, ''));
+          }
+      } catch (error) {
+          console.error('Error handling move:', error);
+      }
+  }, [selectedFile]);
+
   if (isCheckingAuth) {
       return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Spin size="large" /></div>;
   }
@@ -143,7 +171,14 @@ const App: React.FC = () => {
     <Layout style={{ height: '100vh', ...bgStyle }}>
       <Layout style={bgStyle}>
         <Sider width={300} theme={isDarkMode ? 'dark' : 'light'} style={siderStyle}>
-          <Sidebar files={files} onSelect={setSelectedFile} onRefresh={fetchFiles} isDarkMode={isDarkMode} borderColor={borderColor} />
+          <Sidebar 
+            files={files} 
+            onSelect={setSelectedFile} 
+            onRefresh={fetchFiles} 
+            isDarkMode={isDarkMode} 
+            borderColor={borderColor}
+            onMoveFile={handleMoveFile}
+          />
         </Sider>
         <Content style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', ...bgStyle }}>
           {selectedFile && (
@@ -185,7 +220,7 @@ const App: React.FC = () => {
              </div>
           )}
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <Editor filePath={selectedFile} isDarkMode={isDarkMode} />
+            <Editor ref={editorRef} filePath={selectedFile} isDarkMode={isDarkMode} />
           </div>
         </Content>
       </Layout>
