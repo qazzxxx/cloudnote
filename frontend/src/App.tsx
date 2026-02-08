@@ -169,6 +169,23 @@ const App: React.FC = () => {
       }
   };
 
+  // Handle Ctrl+S
+  useEffect(() => {
+      const handleKeyDown = async (e: KeyboardEvent) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+              e.preventDefault();
+              if (selectedFile && editorRef.current) {
+                  await editorRef.current.forceSave();
+              }
+          }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+          window.removeEventListener('keydown', handleKeyDown);
+      };
+  }, [selectedFile]);
+
   if (isCheckingAuth) {
       return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Spin size="large" /></div>;
   }
