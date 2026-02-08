@@ -2,8 +2,6 @@
 
 CloudNote 是一款轻量级、自托管的私有云笔记应用。它采用“纯文件存储”架构，配合现代化的 Web 界面，确保您的数据始终掌控在自己手中。
 
-![CloudNote Screenshot](https://via.placeholder.com/800x400?text=CloudNote+Screenshot)
-
 ## 核心特性
 
 - **纯文件存储**：所有笔记均作为标准的 `.md` 文件存储在您的服务器磁盘上，无需数据库。
@@ -20,15 +18,6 @@ CloudNote 是一款轻量级、自托管的私有云笔记应用。它采用“�
 ## Docker 快速部署
 
 使用 Docker Compose 可以在几秒钟内完成部署。
-
-### 前置要求
-
-- Docker
-- Docker Compose
-
-### 部署步骤
-
-1. 创建一个 `docker-compose.yml` 文件，内容如下：
 
 ```yaml
 version: '3.8'
@@ -47,54 +36,6 @@ services:
     restart: unless-stopped
 ```
 
-2. 启动容器：
-
-```bash
-docker-compose up -d
-```
-
-3. 打开浏览器访问 `http://localhost:6631`。
-
-## 本地开发
-
-### 前置要求
-
-- Node.js 18+
-- npm 或 yarn
-
-### 安装与启动
-
-1. 克隆仓库：
-   ```bash
-   git clone https://github.com/yourusername/cloudnote.git
-   cd cloudnote
-   ```
-
-2. 安装依赖：
-   ```bash
-   # 安装后端依赖
-   cd backend
-   npm install
-
-   # 安装前端依赖
-   cd ../frontend
-   npm install
-   ```
-
-3. 启动开发服务器：
-   
-   终端 1 (后端):
-   ```bash
-   cd backend
-   npm run dev
-   ```
-
-   终端 2 (前端):
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-
 ## 环境变量
 
 | 变量名 | 描述 | 默认值 |
@@ -103,13 +44,9 @@ docker-compose up -d
 | `DATA_DIR` | 笔记存储目录 | `./data` |
 | `PASSWORD` | 访问密码 | `123456` |
 
-## 技术架构
+## 📈 历史 Star | Star History
 
-CloudNote 采用 **"Save-Flush-Move"** 和 **"影子副本 (Shadow Copy)"** 策略来确保数据完整性：
-
-- **影子副本**：前端维护一份与服务器状态一致的“影子”版本。
-- **差异同步**：保存时，仅计算并发送当前内容与影子副本之间的差异（Patch）。
-- **乐观锁校验**：服务器在应用补丁前会校验基准 Checksum，防止覆盖冲突的修改。
+[![Star History Chart](https://api.star-history.com/svg?repos=qazzxxx/cloudnote&type=date&legend=top-left)](https://www.star-history.com/#qazzxxx/cloudnote&type=date&legend=top-left)
 
 ## 许可证
 
