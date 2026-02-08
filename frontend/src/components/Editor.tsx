@@ -175,6 +175,14 @@ const Editor = React.forwardRef<EditorRef, EditorProps>(({ filePath, isDarkMode 
                 }
             }
         }
+        if (contentToLoad) {
+            contentToLoad = contentToLoad.replace(/^([^\n\r]*?)\\\s*(\r?\n|$)/gm, (_match, p1) => {
+                if (!p1 || p1.trim().length === 0) {
+                    return '\u00A0\n\n';
+                }
+                return p1 + '\n\n';
+            });
+        }
 
         // Parse and set content
         const blocks = await editor.tryParseMarkdownToBlocks(contentToLoad);
