@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Dropdown, Modal, Input, message } from 'antd';
 import type { MenuProps } from 'antd';
-import { CloudOutlined } from '@ant-design/icons';
 import { createFile, deleteFile, renameFile, moveFile } from '../api';
 import type { FileNode } from '../api';
 import FileTree from './FileTree/FileTree';
@@ -18,7 +17,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMode, borderColor, onMoveFile }) => {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
-  
+
   // Context Menu State
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -53,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
 
   const onDrop = async (dragKey: string, dropKey: string) => {
     if (dragKey === dropKey) return;
-    
+
     // Determine target path
     // If dropping on a folder, move into it
     // If dropping on a file, we need to know if we are moving into its parent or what.
@@ -62,67 +61,67 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
     // Usually file trees allow dropping on folder.
     // For files, we might need more complex logic (dropping between items).
     // For now, let's implement dropping ON folder = move into.
-    
+
     // We need to find the drop node to check if it's a folder.
     // But we only have keys. We can infer from key or need to pass node.
     // The FileTree passes keys. Let's traverse to find node or just assume logic.
     // Actually, backend move handles the path.
-    
+
     // If dropKey is a file, maybe we shouldn't allow dropping on it?
     // Or maybe we treat it as dropping into its parent?
     // Let's iterate files to find the node type? Or just try.
-    
+
     // Better: check if dropKey ends with .md (file)
     let targetParentPath = dropKey;
     if (dropKey.endsWith('.md')) {
-        // It's a file, so target parent is its directory
-        const lastSlash = dropKey.lastIndexOf('/');
-        targetParentPath = lastSlash > -1 ? dropKey.substring(0, lastSlash) : '';
+      // It's a file, so target parent is its directory
+      const lastSlash = dropKey.lastIndexOf('/');
+      targetParentPath = lastSlash > -1 ? dropKey.substring(0, lastSlash) : '';
     }
-    
+
     // If dragging a file to its own parent, do nothing
     const dragFileName = dragKey.split('/').pop();
     const dragParentPath = dragKey.substring(0, dragKey.lastIndexOf('/'));
-    
+
     // Normalize empty string for root
     const normalizedTargetParent = targetParentPath === '' ? '' : targetParentPath;
     const normalizedDragParent = dragParentPath === '' ? '' : dragParentPath;
-    
+
     if (normalizedTargetParent === normalizedDragParent) return;
 
     // Handle case where dragging folder into itself or its children
     if (!dropKey.endsWith('.md') && (targetParentPath === dragKey || targetParentPath.startsWith(dragKey + '/'))) {
-        return;
+      return;
     }
 
     const newPath = targetParentPath ? `${targetParentPath}/${dragFileName}` : dragFileName;
-    
-    try {
-        // Pre-move hook to handle save state
-        if (onMoveFile) {
-            await onMoveFile(dragKey, newPath as string);
-        }
 
-        await moveFile(dragKey, newPath as string);
-        message.success('移动成功');
-        onRefresh();
-        // Expand the target folder if it was a folder drop
-        if (!dropKey.endsWith('.md')) {
-             const newExpanded = new Set(expandedKeys);
-             newExpanded.add(dropKey);
-             setExpandedKeys(newExpanded);
-        }
+    try {
+      // Pre-move hook to handle save state
+      if (onMoveFile) {
+        await onMoveFile(dragKey, newPath as string);
+      }
+
+      await moveFile(dragKey, newPath as string);
+      message.success('移动成功');
+      onRefresh();
+      // Expand the target folder if it was a folder drop
+      if (!dropKey.endsWith('.md')) {
+        const newExpanded = new Set(expandedKeys);
+        newExpanded.add(dropKey);
+        setExpandedKeys(newExpanded);
+      }
     } catch (e: any) {
-        // Suppress destination exists error since we are moving
-        if (e.response?.data?.error === 'Destination already exists') {
-             // If destination exists, maybe we can ignore it or show error.
-             // But the user issue is "creates a new identical file".
-             // This suggests that onDrop is called multiple times or logic is flawed.
-             // Let's debounce or prevent multi-calls.
-             message.error('目标位置已存在同名文件');
-        } else {
-             message.error('移动失败');
-        }
+      // Suppress destination exists error since we are moving
+      if (e.response?.data?.error === 'Destination already exists') {
+        // If destination exists, maybe we can ignore it or show error.
+        // But the user issue is "creates a new identical file".
+        // This suggests that onDrop is called multiple times or logic is flawed.
+        // Let's debounce or prevent multi-calls.
+        message.error('目标位置已存在同名文件');
+      } else {
+        message.error('移动失败');
+      }
     }
   };
 
@@ -162,7 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
 
   const handleModalOk = async () => {
     if (!inputValue) return;
-    
+
     try {
       if (modalType === 'rename' && selectedNode) {
         const parentPath = selectedNode.key.substring(0, selectedNode.key.lastIndexOf('/'));
@@ -171,19 +170,19 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
       } else if (modalType === 'createFile') {
         let parentPath = '';
         if (selectedNode) {
-            // If selected is file, create in its parent. If folder, create inside.
-            parentPath = selectedNode.isLeaf 
-                ? selectedNode.key.substring(0, selectedNode.key.lastIndexOf('/'))
-                : selectedNode.key;
+          // If selected is file, create in its parent. If folder, create inside.
+          parentPath = selectedNode.isLeaf
+            ? selectedNode.key.substring(0, selectedNode.key.lastIndexOf('/'))
+            : selectedNode.key;
         }
         const newPath = parentPath ? `${parentPath}/${inputValue}.md` : `${inputValue}.md`;
         await createFile(newPath, 'file');
       } else if (modalType === 'createFolder') {
         let parentPath = '';
         if (selectedNode) {
-            parentPath = selectedNode.isLeaf 
-                ? selectedNode.key.substring(0, selectedNode.key.lastIndexOf('/'))
-                : selectedNode.key;
+          parentPath = selectedNode.isLeaf
+            ? selectedNode.key.substring(0, selectedNode.key.lastIndexOf('/'))
+            : selectedNode.key;
         }
         const newPath = parentPath ? `${parentPath}/${inputValue}` : inputValue;
         await createFile(newPath, 'folder');
@@ -206,31 +205,31 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: isDarkMode ? '#1f1f1f' : '#fcfcfc', color: isDarkMode ? '#fff' : 'inherit' }}>
-      <div className="sidebar-logo" style={{ 
-          height: '64px',
-          padding: '0 20px', 
-          fontSize: '16px', 
-          fontWeight: '600', 
-          color: isDarkMode ? '#fff' : '#333', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '12px', 
-          borderBottom: borderColor ? `1px solid ${borderColor}` : (isDarkMode ? '1px solid #424242' : '1px solid rgba(0,0,0,0.06)') 
+      <div className="sidebar-logo" style={{
+        height: '64px',
+        padding: '0 20px',
+        fontSize: '16px',
+        fontWeight: '600',
+        color: isDarkMode ? '#fff' : '#333',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        borderBottom: borderColor ? `1px solid ${borderColor}` : (isDarkMode ? '1px solid #424242' : '1px solid rgba(0,0,0,0.06)')
       }}>
-        <CloudOutlined style={{ color: '#1890ff', fontSize: '20px' }} />
-        <span style={{ letterSpacing: '0.5px' }}>CloudNote</span>
+        <img src="/logo.svg" alt="Logo" style={{ width: '32px', height: '32px' }} />
+        <span style={{ letterSpacing: '0.5px' }}>云简 - 墨染云间，书尽简意</span>
       </div>
-      
+
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        <FileTree 
-            files={files}
-            expandedKeys={expandedKeys}
-            selectedPath={selectedPath}
-            onExpand={onExpand}
-            onSelect={handleSelect}
-            onContextMenu={onContextMenu}
-            onDrop={onDrop}
-            isDarkMode={isDarkMode}
+        <FileTree
+          files={files}
+          expandedKeys={expandedKeys}
+          selectedPath={selectedPath}
+          onExpand={onExpand}
+          onSelect={handleSelect}
+          onContextMenu={onContextMenu}
+          onDrop={onDrop}
+          isDarkMode={isDarkMode}
         />
       </div>
 
@@ -250,11 +249,11 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
       >
-        <Input 
-            value={inputValue} 
-            onChange={(e) => setInputValue(e.target.value)} 
-            addonAfter={modalType === 'createFile' ? '.md' : ''}
-            onPressEnter={handleModalOk}
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          addonAfter={modalType === 'createFile' ? '.md' : ''}
+          onPressEnter={handleModalOk}
         />
       </Modal>
     </div>
