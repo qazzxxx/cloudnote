@@ -11,6 +11,7 @@ interface FileTreeNodeProps {
   onSelect: (path: string) => void;
   onContextMenu: (e: React.MouseEvent, node: FileNode) => void;
   onDrop: (dragNodeKey: string, targetNodeKey: string) => void;
+  onUpload?: (files: FileList, targetKey: string) => void;
   isDarkMode?: boolean;
 }
 
@@ -23,6 +24,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   onSelect,
   onContextMenu,
   onDrop,
+  onUpload,
   isDarkMode
 }) => {
   const isExpanded = expandedKeys.has(node.key);
@@ -68,6 +70,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
         }
     }
     // If no custom data, it might be external file or something else, ignore it here
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        if (onUpload) {
+            onUpload(e.dataTransfer.files, node.key);
+        }
+    }
   };
 
   return (
@@ -111,6 +118,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               onSelect={onSelect}
               onContextMenu={onContextMenu}
               onDrop={onDrop}
+              onUpload={onUpload}
               isDarkMode={isDarkMode}
             />
           ))}

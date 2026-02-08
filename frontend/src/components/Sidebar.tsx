@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Dropdown, Modal, Input, message } from 'antd';
 import type { InputRef, MenuProps } from 'antd';
-import { createFile, deleteFile, renameFile, moveFile } from '../api';
+import { createFile, deleteFile, renameFile, moveFile, updateFile } from '../api';
 import type { FileNode } from '../api';
 import FileTree from './FileTree/FileTree';
 
@@ -138,6 +138,69 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
     }
   };
 
+  const handleFileUpload = async (files: FileList, targetKey: string | null) => {
+    // Determine target directory
+    let targetDir = '';
+    if (targetKey) {
+        if (targetKey.endsWith('.md')) {
+             // If dropping on a file, upload to its parent directory
+             const lastSlash = targetKey.lastIndexOf('/');
+             targetDir = lastSlash > -1 ? targetKey.substring(0, lastSlash) : '';
+        } else {
+             // Dropping on a folder
+             targetDir = targetKey;
+        }
+    }
+    // If targetKey is null, targetDir is '' (root)
+
+    const fileArray = Array.from(files);
+    let successCount = 0;
+    let lastUploadedPath = '';
+
+    for (const file of fileArray) {
+        if (!file.name.endsWith('.md')) {
+            message.warning(`跳过非Markdown文件: ${file.name}`);
+            continue;
+        }
+
+        try {
+            const content = await file.text();
+            const newPath = targetDir ? `${targetDir}/${file.name}` : file.name;
+            
+            // Create file (might fail if exists, but we can try to update or overwrite)
+            // Ideally we should check existence or handle error
+            try {
+                await createFile(newPath, 'file');
+            } catch (e: any) {
+                if (e.response?.data?.error === 'File already exists') {
+                    // It exists, we will overwrite it with updateFile
+                } else {
+                    throw e;
+                }
+            }
+            
+            // Write content
+            await updateFile(newPath, content);
+            successCount++;
+            lastUploadedPath = newPath;
+        } catch (e) {
+            console.error(`上传失败: ${file.name}`, e);
+            message.error(`上传失败: ${file.name}`);
+        }
+    }
+
+    if (successCount > 0) {
+        message.success(`成功上传 ${successCount} 个文件`);
+        onRefresh();
+        
+        // Select the last uploaded file
+        if (lastUploadedPath) {
+            setSelectedPath(lastUploadedPath);
+            onSelect(lastUploadedPath);
+        }
+    }
+  };
+
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     setContextMenuVisible(false);
 
@@ -227,8 +290,28 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
     { key: 'delete', label: '删除', danger: true, disabled: !selectedNode },
   ];
 
+  const handleRootDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleRootDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Only handle file drops
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileUpload(e.dataTransfer.files, null);
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: isDarkMode ? '#1f1f1f' : '#fcfcfc', color: isDarkMode ? '#fff' : 'inherit' }}>
+    <div 
+        style={{ display: 'flex', flexDirection: 'column', height: '100%', background: isDarkMode ? '#1f1f1f' : '#fcfcfc', color: isDarkMode ? '#fff' : 'inherit' }}
+        onDragOver={handleRootDragOver}
+        onDrop={handleRootDrop}
+    >
       <div className="sidebar-logo" style={{
         height: '64px',
         padding: '0 20px',
@@ -255,6 +338,7 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
           onSelect={handleSelect}
           onContextMenu={onContextMenu}
           onDrop={onDrop}
+          onUpload={handleFileUpload}
           isDarkMode={isDarkMode}
         />
       </div>
