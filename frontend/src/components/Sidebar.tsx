@@ -133,6 +133,8 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
       Modal.confirm({
         title: '确认删除',
         content: `确定要删除 ${selectedNode.title} 吗？`,
+        okText: '确认',
+        cancelText: '取消',
         onOk: async () => {
           try {
             await deleteFile(selectedNode.key);
@@ -250,13 +252,21 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
+        destroyOnClose
+        centered
       >
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          addonAfter={modalType === 'createFile' ? '.md' : ''}
-          onPressEnter={handleModalOk}
-        />
+        <div style={{ paddingTop: '12px' }}>
+            <Input 
+                value={inputValue} 
+                onChange={(e) => setInputValue(e.target.value)} 
+                addonAfter={modalType === 'createFile' ? '.md' : ''}
+                onPressEnter={handleModalOk}
+                placeholder={modalType === 'createFile' ? '请输入笔记名称' : (modalType === 'createFolder' ? '请输入文件夹名称' : '请输入新名称')}
+                autoFocus
+            />
+        </div>
       </Modal>
     </div>
   );
