@@ -61,7 +61,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             letterSpacing: '2px',
             fontWeight: '300'
           }}>
-            执笔云上，简笔流年
+            执笔云上，简纳万千
           </div>
         </div>
 
