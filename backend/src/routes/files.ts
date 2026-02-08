@@ -14,10 +14,12 @@ const md5 = (text: string) => crypto.createHash('md5').update(text).digest('hex'
 // Define data directory
 const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, '../../data');
 const IMAGES_DIR = path.join(DATA_DIR, 'upload');
+const TRASH_DIR = path.join(DATA_DIR, '_trash');
 
 // Ensure data directory exists
 fs.ensureDirSync(DATA_DIR);
 fs.ensureDirSync(IMAGES_DIR);
+fs.ensureDirSync(TRASH_DIR);
 
 // Configure Multer
 const storage = multer.diskStorage({
@@ -65,7 +67,7 @@ const buildFileTree = async (dir: string, relativePath: string = ''): Promise<Fi
   const nodes: FileNode[] = [];
 
   for (const item of items) {
-    if (item.name.startsWith('.') || item.name === 'upload') continue; // Skip hidden files and upload folder
+    if (item.name.startsWith('.') || item.name === 'upload' || item.name === '_trash') continue; // Skip hidden files, upload and _trash folder
 
     const itemRelativePath = path.join(relativePath, item.name);
     const fullPath = path.join(dir, item.name);
@@ -200,14 +202,24 @@ router.patch('/', async (req, res) => {
   }
 });
 
-// DELETE /api/files - Delete file or folder
+// DELETE /api/files - Soft Delete file or folder
 router.delete('/', async (req, res) => {
   try {
     const reqPath = req.query.path as string;
     if (!reqPath) return res.status(400).json({ error: 'Path is required' });
     
     const fullPath = getSafePath(reqPath);
-    await fs.remove(fullPath);
+    
+    // Check if it exists
+    if (!await fs.pathExists(fullPath)) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Move to trash with timestamp
+    const fileName = path.basename(fullPath);
+    const trashPath = path.join(TRASH_DIR, `${Date.now()}_${fileName}`);
+    
+    await fs.move(fullPath, trashPath);
     
     res.json({ success: true });
   } catch (error) {

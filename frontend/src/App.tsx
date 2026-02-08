@@ -256,7 +256,9 @@ const App: React.FC = () => {
                     onClick={() => setSiderVisible(!siderVisible)}
                     style={{ marginRight: 12 }}
                   />
+                  {/* Key prop ensures input re-mounts when fileName changes externally (like on delete) */}
                   <Input 
+                    key={selectedFile}
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
                     onBlur={handleTitleChange}

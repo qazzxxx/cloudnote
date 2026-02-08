@@ -139,6 +139,10 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
           try {
             await deleteFile(selectedNode.key);
             message.success('删除成功');
+            // If the deleted file was selected, clear selection
+            if (selectedPath === selectedNode.key) {
+                onSelect(''); // Tell parent to clear selection
+            }
             onRefresh();
           } catch (e) {
             message.error('删除失败');

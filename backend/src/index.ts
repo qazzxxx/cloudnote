@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import fileRoutes from './routes/files';
 import authRoutes from './routes/auth';
 import { authMiddleware } from './middleware/auth';
+import { initGC } from './gc';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,4 +35,7 @@ if (fs.existsSync(frontendPath)) {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Data directory: ${path.resolve(__dirname, '../../data')}`);
+  
+  // Start GC Scheduler
+  initGC();
 });
