@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dropdown, Modal, Input, message } from 'antd';
-import type { MenuProps } from 'antd';
+import type { InputRef, MenuProps } from 'antd';
 import { createFile, deleteFile, renameFile, moveFile } from '../api';
 import type { FileNode } from '../api';
 import FileTree from './FileTree/FileTree';
@@ -27,6 +27,19 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<'createFile' | 'createFolder' | 'rename'>('createFile');
   const [inputValue, setInputValue] = useState('');
+  const inputRef = useRef<InputRef>(null);
+
+  // Focus input when modal opens
+  useEffect(() => {
+    if (modalVisible) {
+      // Small timeout to ensure modal animation is done or input is mounted
+      setTimeout(() => {
+        inputRef.current?.focus({
+          cursor: 'end',
+        });
+      }, 100);
+    }
+  }, [modalVisible]);
 
   const onExpand = (key: string) => {
     const newExpandedKeys = new Set(expandedKeys);
@@ -186,6 +199,8 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
         }
         const newPath = parentPath ? `${parentPath}/${inputValue}.md` : `${inputValue}.md`;
         await createFile(newPath, 'file');
+        setSelectedPath(newPath);
+        onSelect(newPath);
       } else if (modalType === 'createFolder') {
         let parentPath = '';
         if (selectedNode) {
@@ -266,8 +281,9 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
       >
         <div style={{ paddingTop: '12px' }}>
             <Input 
+                ref={inputRef}
                 value={inputValue} 
-                onChange={(e) => setInputValue(e.target.value)} 
+                onChange={(e) => setInputValue(e.target.value)}  
                 addonAfter={(modalType === 'createFile' || (modalType === 'rename' && selectedNode?.isLeaf)) ? '.md' : ''}
                 onPressEnter={handleModalOk}
                 placeholder={modalType === 'createFile' ? '请输入笔记名称' : (modalType === 'createFolder' ? '请输入文件夹名称' : '请输入新名称')}
