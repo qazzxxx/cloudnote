@@ -214,10 +214,12 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        borderBottom: borderColor ? `1px solid ${borderColor}` : (isDarkMode ? '1px solid #424242' : '1px solid rgba(0,0,0,0.06)')
+        borderBottom: borderColor ? `1px solid ${borderColor}` : (isDarkMode ? '1px solid #424242' : '1px solid rgba(0,0,0,0.06)'),
+        overflow: 'hidden',
+        whiteSpace: 'nowrap'
       }}>
-        <img src="/logo.svg" alt="Logo" style={{ width: '32px', height: '32px' }} />
-        <span style={{ letterSpacing: '0.5px' }}>云简 - 墨染云间，书尽简意</span>
+        <img src="/logo.svg" alt="Logo" style={{ width: '32px', height: '32px', flexShrink: 0 }} />
+        <span style={{ letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis' }}>云简 - 墨染云间，书尽简意</span>
       </div>
 
       <div style={{ flex: 1, overflow: 'hidden' }}>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Layout, message, Input, Spin, Button, theme, ConfigProvider } from 'antd';
-import { BulbOutlined, BulbFilled } from '@ant-design/icons';
+import { Layout, message, Input, Spin, Button, theme, ConfigProvider, Drawer, Grid } from 'antd';
+import { BulbOutlined, BulbFilled, MenuOutlined } from '@ant-design/icons';
 import Sidebar from './components/Sidebar';
 import Editor, { type EditorRef } from './components/Editor';
 import Login from './components/Login';
@@ -10,6 +10,7 @@ import type { FileNode } from './api';
 import './App.css';
 
 const { Sider, Content } = Layout;
+const { useBreakpoint } = Grid;
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,6 +21,23 @@ const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
   });
+  
+  // Sidebar state
+  const screens = useBreakpoint();
+  const [siderVisible, setSiderVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+      // If screens.md is false, it means width < 768px (mobile)
+      // screens object is empty on first render sometimes
+      const mobile = screens.md === false;
+      setIsMobile(mobile);
+      if (mobile) {
+          setSiderVisible(false);
+      } else {
+          setSiderVisible(true);
+      }
+  }, [screens.md]);
   
   const editorRef = useRef<EditorRef>(null);
 
@@ -143,6 +161,14 @@ const App: React.FC = () => {
       }
   }, [selectedFile]);
 
+  // Handle file select wrapper to close drawer on mobile
+  const handleFileSelect = (path: string) => {
+      setSelectedFile(path);
+      if (isMobile) {
+          setSiderVisible(false);
+      }
+  };
+
   if (isCheckingAuth) {
       return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Spin size="large" /></div>;
   }
@@ -170,16 +196,48 @@ const App: React.FC = () => {
     >
     <Layout style={{ height: '100vh', ...bgStyle }}>
       <Layout style={bgStyle}>
-        <Sider width={300} theme={isDarkMode ? 'dark' : 'light'} style={siderStyle}>
-          <Sidebar 
-            files={files} 
-            onSelect={setSelectedFile} 
-            onRefresh={fetchFiles} 
-            isDarkMode={isDarkMode} 
-            borderColor={borderColor}
-            onMoveFile={handleMoveFile}
-          />
-        </Sider>
+        {!isMobile && (
+            <Sider 
+                width={300} 
+                theme={isDarkMode ? 'dark' : 'light'} 
+                style={siderStyle}
+                collapsible
+                collapsed={!siderVisible}
+                onCollapse={(collapsed) => setSiderVisible(!collapsed)}
+                trigger={null}
+                collapsedWidth={0}
+            >
+              <Sidebar 
+                files={files} 
+                onSelect={handleFileSelect} 
+                onRefresh={fetchFiles} 
+                isDarkMode={isDarkMode} 
+                borderColor={borderColor}
+                onMoveFile={handleMoveFile}
+              />
+            </Sider>
+        )}
+        
+        {isMobile && (
+             <Drawer
+                placement="left"
+                onClose={() => setSiderVisible(false)}
+                open={siderVisible}
+                width={300}
+                bodyStyle={{ padding: 0, background: isDarkMode ? '#1f1f1f' : '#fcfcfc' }}
+                headerStyle={{ display: 'none' }} // Hide default header, Sidebar has its own logo
+             >
+                  <Sidebar 
+                    files={files} 
+                    onSelect={handleFileSelect} 
+                    onRefresh={fetchFiles} 
+                    isDarkMode={isDarkMode} 
+                    borderColor={borderColor}
+                    onMoveFile={handleMoveFile}
+                  />
+             </Drawer>
+        )}
+
         <Content style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', ...bgStyle }}>
           {selectedFile && (
               <div style={{ 
@@ -192,6 +250,12 @@ const App: React.FC = () => {
                   alignItems: 'center',
                   background: isDarkMode ? '#1f1f1f' : '#fff' // Match header bg
               }}>
+                  <Button
+                    type="text"
+                    icon={<MenuOutlined />}
+                    onClick={() => setSiderVisible(!siderVisible)}
+                    style={{ marginRight: 12 }}
+                  />
                   <Input 
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
@@ -200,7 +264,7 @@ const App: React.FC = () => {
                         (e.target as HTMLInputElement).blur();
                     }}
                     variant="borderless"
-                    style={{ fontSize: '20px', fontWeight: 'bold', padding: 0, flex: 1, color: isDarkMode ? '#fff' : '#000' }}
+                    style={{ fontSize: '20px', fontWeight: 'bold', padding: 0, flex: 1, minWidth: 0, color: isDarkMode ? '#fff' : '#000' }}
                   />
                   <Button 
                     type="text" 
@@ -212,6 +276,12 @@ const App: React.FC = () => {
           )}
           {!selectedFile && (
              <div style={{ position: 'absolute', top: 20, right: 20 }}>
+                <Button
+                    type="text"
+                    icon={<MenuOutlined />}
+                    onClick={() => setSiderVisible(!siderVisible)}
+                    style={{ marginRight: 12 }}
+                />
                 <Button 
                     type="text" 
                     icon={isDarkMode ? <BulbFilled style={{ color: '#FFC857' }} /> : <BulbOutlined />} 
