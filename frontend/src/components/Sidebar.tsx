@@ -148,7 +148,8 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
     } else if (key === 'rename') {
       if (!selectedNode) return;
       setModalType('rename');
-      setInputValue(selectedNode.title);
+      // Remove .md extension for display if it's a file
+      setInputValue(selectedNode.isLeaf ? selectedNode.title.replace(/\.md$/, '') : selectedNode.title);
       setModalVisible(true);
     } else if (key === 'newFile') {
       setModalType('createFile');
@@ -167,7 +168,9 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
     try {
       if (modalType === 'rename' && selectedNode) {
         const parentPath = selectedNode.key.substring(0, selectedNode.key.lastIndexOf('/'));
-        const newPath = parentPath ? `${parentPath}/${inputValue}` : inputValue;
+        // If it's a file, we need to append .md back
+        const finalName = selectedNode.isLeaf ? `${inputValue}.md` : inputValue;
+        const newPath = parentPath ? `${parentPath}/${finalName}` : finalName;
         await renameFile(selectedNode.key, newPath);
       } else if (modalType === 'createFile') {
         let parentPath = '';
@@ -261,7 +264,7 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
             <Input 
                 value={inputValue} 
                 onChange={(e) => setInputValue(e.target.value)} 
-                addonAfter={modalType === 'createFile' ? '.md' : ''}
+                addonAfter={(modalType === 'createFile' || (modalType === 'rename' && selectedNode?.isLeaf)) ? '.md' : ''}
                 onPressEnter={handleModalOk}
                 placeholder={modalType === 'createFile' ? '请输入笔记名称' : (modalType === 'createFolder' ? '请输入文件夹名称' : '请输入新名称')}
                 autoFocus
