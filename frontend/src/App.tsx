@@ -26,6 +26,47 @@ const App: React.FC = () => {
   const screens = useBreakpoint();
   const [siderVisible, setSiderVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Resizable Sidebar State
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+      const saved = localStorage.getItem('sidebarWidth');
+      return saved ? parseInt(saved, 10) : 300;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarWidthRef = useRef(sidebarWidth);
+
+  useEffect(() => {
+      if (!isResizing) return;
+
+      const handleMouseMove = (e: MouseEvent) => {
+          // Prevent text selection while dragging
+          e.preventDefault();
+          
+          let newWidth = e.clientX;
+          // Constraints
+          if (newWidth < 200) newWidth = 200;
+          if (newWidth > 800) newWidth = 800; // Max width
+          
+          setSidebarWidth(newWidth);
+          sidebarWidthRef.current = newWidth;
+      };
+
+      const handleMouseUp = () => {
+          setIsResizing(false);
+          localStorage.setItem('sidebarWidth', sidebarWidthRef.current.toString());
+          document.body.style.cursor = 'default';
+      };
+
+      document.body.style.cursor = 'col-resize';
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+          window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('mouseup', handleMouseUp);
+          document.body.style.cursor = 'default';
+      };
+  }, [isResizing]);
 
   useEffect(() => {
       // If screens.md is false, it means width < 768px (mobile)
@@ -214,25 +255,47 @@ const App: React.FC = () => {
     <Layout style={{ height: '100vh', ...bgStyle }}>
       <Layout style={bgStyle}>
         {!isMobile && (
-            <Sider 
-                width={300} 
-                theme={isDarkMode ? 'dark' : 'light'} 
-                style={siderStyle}
-                collapsible
-                collapsed={!siderVisible}
-                onCollapse={(collapsed) => setSiderVisible(!collapsed)}
-                trigger={null}
-                collapsedWidth={0}
-            >
-              <Sidebar 
-                files={files} 
-                onSelect={handleFileSelect} 
-                onRefresh={fetchFiles} 
-                isDarkMode={isDarkMode} 
-                borderColor={borderColor}
-                onMoveFile={handleMoveFile}
-              />
-            </Sider>
+            <>
+                <Sider 
+                    width={sidebarWidth} 
+                    theme={isDarkMode ? 'dark' : 'light'} 
+                    style={siderStyle}
+                    collapsible
+                    collapsed={!siderVisible}
+                    onCollapse={(collapsed) => setSiderVisible(!collapsed)}
+                    trigger={null}
+                    collapsedWidth={0}
+                >
+                <Sidebar 
+                    files={files} 
+                    onSelect={handleFileSelect} 
+                    onRefresh={fetchFiles} 
+                    isDarkMode={isDarkMode} 
+                    borderColor={borderColor}
+                    onMoveFile={handleMoveFile}
+                />
+                </Sider>
+                {siderVisible && (
+                    <div
+                        onMouseDown={() => setIsResizing(true)}
+                        style={{
+                            width: '4px',
+                            cursor: 'col-resize',
+                            background: isResizing ? '#1890ff' : 'transparent',
+                            height: '100%',
+                            zIndex: 10,
+                            flexShrink: 0,
+                            transition: 'background 0.2s',
+                            marginLeft: '-2px', // Pull back slightly to overlay border or just sit tight
+                            marginRight: '-2px', // Negative margin to not take up visual space? Or just 4px is fine.
+                            // Actually 4px width is fine.
+                            position: 'relative' 
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#1890ff'}
+                        onMouseLeave={(e) => !isResizing && (e.currentTarget.style.background = 'transparent')}
+                    />
+                )}
+            </>
         )}
         
         {isMobile && (
