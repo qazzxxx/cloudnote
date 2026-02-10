@@ -155,15 +155,32 @@ const App: React.FC = () => {
         }
     }, [selectedFile]);
 
-    // Restore last visited file on auth
-    useEffect(() => {
-        if (isAuthenticated && !selectedFile) {
-            const lastVisited = localStorage.getItem('lastVisitedFile');
-            if (lastVisited) {
-                setSelectedFile(lastVisited);
+    // Helper to check if file exists in tree
+    const isFileInTree = (nodes: FileNode[], path: string): boolean => {
+        for (const node of nodes) {
+            if (node.key === path) return true;
+            if (node.children) {
+                if (isFileInTree(node.children, path)) return true;
             }
         }
-    }, [isAuthenticated, selectedFile]);
+        return false;
+    };
+
+    const hasRestoredSession = useRef(false);
+
+    // Restore last visited file on auth (Run once)
+    useEffect(() => {
+        if (isAuthenticated && files.length > 0 && !hasRestoredSession.current) {
+            hasRestoredSession.current = true;
+            const lastVisited = localStorage.getItem('lastVisitedFile');
+            if (lastVisited && isFileInTree(files, lastVisited)) {
+                setSelectedFile(lastVisited);
+            } else if (lastVisited) {
+                // File no longer exists, clear storage
+                localStorage.removeItem('lastVisitedFile');
+            }
+        }
+    }, [isAuthenticated, files]);
 
     const handleTitleChange = async (e: React.FocusEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
         if (!selectedFile) return;

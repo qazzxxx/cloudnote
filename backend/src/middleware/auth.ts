@@ -13,6 +13,12 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     return next();
   }
 
+  // Check for x-api-password header (for scripts/API usage)
+  const apiPassword = req.headers['x-api-password'] as string;
+  if (apiPassword === process.env.PASSWORD) {
+    return next();
+  }
+
   // Check for token in headers
   const authHeader = req.headers.authorization;
   if (!authHeader) {
