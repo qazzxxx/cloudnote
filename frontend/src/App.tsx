@@ -8,6 +8,7 @@ import { getFiles, renameFile, getAuthStatus } from './api';
 import { StorageService } from './services/StorageService';
 import type { FileNode } from './api';
 import './App.css';
+import ReloadPrompt from './components/ReloadPrompt';
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -288,6 +289,7 @@ const App: React.FC = () => {
                 }
             }}
         >
+            <ReloadPrompt />
             <Layout style={{ height: '100vh', ...bgStyle }}>
                 <Layout style={bgStyle}>
                     {!isMobile && (
