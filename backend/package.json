@@ -29,6 +29,7 @@
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "nodemon": "^3.1.11",
+    "p-limit": "^7.3.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
