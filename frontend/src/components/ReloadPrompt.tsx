@@ -28,21 +28,21 @@ function ReloadPrompt() {
             message.info({
                 content: (
                     <span>
-                        New content available, click on reload button to update.
+                        有新内容可用，请点击刷新按钮更新。
                         <Button
                             type="link"
                             size="small"
                             onClick={() => updateServiceWorker(true)}
                             style={{ marginLeft: 8 }}
                         >
-                            Reload
+                            刷新
                         </Button>
                         <Button
                             type="link"
                             size="small"
                             onClick={() => setNeedRefresh(false)}
                         >
-                            Close
+                            关闭
                         </Button>
                     </span>
                 ),
