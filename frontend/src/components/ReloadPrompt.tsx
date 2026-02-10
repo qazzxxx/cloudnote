@@ -18,7 +18,7 @@ function ReloadPrompt() {
 
     useEffect(() => {
         if (offlineReady) {
-            message.success('App is ready to work offline')
+            // message.success('App is ready to work offline')
             setOfflineReady(false)
         }
     }, [offlineReady, setOfflineReady])
