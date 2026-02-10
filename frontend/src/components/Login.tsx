@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Input, Button, message } from 'antd';
-import { CloudOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined } from '@ant-design/icons';
 import { login } from '../api';
 
 interface LoginProps {
@@ -52,7 +52,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             justifyContent: 'center',
             gap: '15px'
           }}>
-            <CloudOutlined style={{ color: '#1890ff' }} />
+            <img src="/logo.svg" alt="Logo" style={{ width: '48px', height: '48px' }} />
             <span>云简</span>
           </div>
           <div style={{ 

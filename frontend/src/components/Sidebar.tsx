@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Dropdown, Modal, Input, message } from 'antd';
+import { Dropdown, Modal, Input, message, Button, List, Empty, Spin } from 'antd';
 import type { InputRef, MenuProps } from 'antd';
-import { createFile, deleteFile, renameFile, moveFile, updateFile } from '../api';
-import type { FileNode } from '../api';
+import { SearchOutlined, FileMarkdownOutlined, SettingOutlined, BulbOutlined, BulbFilled, LogoutOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons';
+import { createFile, deleteFile, renameFile, moveFile, updateFile, searchFiles } from '../api';
+import type { FileNode, SearchResult } from '../api';
 import FileTree from './FileTree/FileTree';
+import { Tooltip } from 'antd';
 
 interface SidebarProps {
   files: FileNode[];
@@ -12,9 +14,12 @@ interface SidebarProps {
   isDarkMode?: boolean;
   borderColor?: string;
   onMoveFile?: (oldPath: string, newPath: string) => Promise<void>;
+  onToggleTheme?: () => void;
+  onLogout?: () => void;
+  requiresAuth?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMode, borderColor, onMoveFile }) => {
+const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMode, borderColor, onMoveFile, onToggleTheme, onLogout, requiresAuth }) => {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
 
@@ -29,6 +34,13 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<InputRef>(null);
 
+  // Search State
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const searchInputRef = useRef<InputRef>(null);
+
   // Focus input when modal opens
   useEffect(() => {
     if (modalVisible) {
@@ -40,6 +52,37 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
       }, 100);
     }
   }, [modalVisible]);
+
+  // Focus search input when search modal opens
+  useEffect(() => {
+    if (searchVisible) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [searchVisible]);
+
+  // Handle search
+  useEffect(() => {
+      const timer = setTimeout(async () => {
+          if (!searchQuery.trim()) {
+              setSearchResults([]);
+              return;
+          }
+          
+          setSearching(true);
+          try {
+              const results = await searchFiles(searchQuery);
+              setSearchResults(results);
+          } catch (e) {
+              console.error(e);
+          } finally {
+              setSearching(false);
+          }
+      }, 300);
+      
+      return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const onExpand = (key: string) => {
     const newExpandedKeys = new Set(expandedKeys);
@@ -326,8 +369,10 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
         overflow: 'hidden',
         whiteSpace: 'nowrap'
       }}>
-        <img src="/logo.svg" alt="Logo" style={{ width: '32px', height: '32px', flexShrink: 0 }} />
-        <span style={{ fontSize: '24px', letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis' }}>云简</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+            <img src="/logo.svg" alt="Logo" style={{ width: '32px', height: '32px', flexShrink: 0 }} />
+            <span style={{ fontSize: '24px', letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis' }}>云简</span>
+        </div>
       </div>
 
       <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -344,6 +389,55 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
         />
       </div>
 
+      <div style={{
+          padding: '12px',
+          borderTop: borderColor ? `1px solid ${borderColor}` : (isDarkMode ? '1px solid #424242' : '1px solid rgba(0,0,0,0.06)'),
+          display: 'flex',
+          justifyContent: 'space-around',
+          alignItems: 'center'
+      }}>
+          <Tooltip title="搜索">
+            <Button 
+                type="text" 
+                icon={<SearchOutlined style={{ fontSize: '18px' }} />} 
+                onClick={() => {
+                    setSearchVisible(true);
+                    setSearchQuery('');
+                    setSearchResults([]);
+                }}
+                style={{ color: isDarkMode ? '#aaa' : '#666', width: '40px', height: '40px' }}
+            />
+          </Tooltip>
+          
+          <Tooltip title={isDarkMode ? "切换亮色模式" : "切换暗色模式"}>
+            <Button 
+                type="text" 
+                icon={isDarkMode ? <SunOutlined style={{ fontSize: '18px', color: '#FFC857' }} /> : <MoonOutlined style={{ fontSize: '18px' }} />} 
+                onClick={onToggleTheme}
+                style={{ color: isDarkMode ? '#aaa' : '#666', width: '40px', height: '40px' }}
+            />
+          </Tooltip>
+
+          {requiresAuth && (
+            <Tooltip title="退出登录">
+                <Button 
+                    type="text" 
+                    icon={<LogoutOutlined style={{ fontSize: '18px' }} />} 
+                    onClick={() => {
+                        Modal.confirm({
+                            title: '确认退出',
+                            content: '确定要退出登录吗？',
+                            okText: '确认',
+                            cancelText: '取消',
+                            onOk: onLogout
+                        });
+                    }}
+                    style={{ color: isDarkMode ? '#aaa' : '#666', width: '40px', height: '40px' }}
+                />
+            </Tooltip>
+          )}
+      </div>
+
       <Dropdown
         menu={{ items: menuItems, onClick: handleMenuClick }}
         trigger={['contextMenu']}
@@ -353,6 +447,72 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
       >
         <div style={{ display: 'none' }}></div>
       </Dropdown>
+
+      <Modal
+        title="搜索笔记"
+        open={searchVisible}
+        onCancel={() => setSearchVisible(false)}
+        footer={null}
+        width={600}
+        destroyOnClose
+        centered
+        styles={{ body: { maxHeight: '60vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' } }}
+      >
+        <div style={{ paddingBottom: '16px' }}>
+            <Input 
+                ref={searchInputRef}
+                placeholder="搜索文件名或内容..." 
+                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                allowClear
+                size="large"
+            />
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: '200px' }}>
+            {searching ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><Spin /></div>
+            ) : searchResults.length > 0 ? (
+                <List
+                    itemLayout="horizontal"
+                    dataSource={searchResults}
+                    renderItem={(item) => (
+                        <List.Item 
+                            style={{ cursor: 'pointer', padding: '12px', borderRadius: '6px', transition: 'background 0.2s' }}
+                            className="search-result-item"
+                            onClick={() => {
+                                handleSelect(item.key);
+                                setSearchVisible(false);
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : '#f5f5f5'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                            <List.Item.Meta
+                                avatar={<FileMarkdownOutlined style={{ fontSize: '20px', color: '#1890ff' }} />}
+                                title={<span style={{ color: isDarkMode ? '#ddd' : '#333' }}>{item.title}</span>}
+                                description={
+                                    <div style={{ fontSize: '12px', color: '#888' }}>
+                                        <div style={{ marginBottom: '4px' }}>{item.key}</div>
+                                        {item.matches.map((match, i) => (
+                                            <div key={i} style={{ background: isDarkMode ? 'rgba(255,255,0,0.1)' : '#fff7e6', padding: '2px 4px', borderRadius: '2px', display: 'inline-block', marginRight: '4px' }}>
+                                                {match}
+                                            </div>
+                                        ))}
+                                    </div>
+                                }
+                            />
+                        </List.Item>
+                    )}
+                />
+            ) : searchQuery ? (
+                <Empty description="未找到相关笔记" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            ) : (
+                <div style={{ textAlign: 'center', color: '#999', paddingTop: '40px' }}>
+                    输入关键词开始搜索
+                </div>
+            )}
+        </div>
+      </Modal>
 
       <Modal
         title={modalType === 'rename' ? '重命名' : (modalType === 'createFile' ? '新建笔记' : '新建文件夹')}

@@ -15,6 +15,7 @@ const { useBreakpoint } = Grid;
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [requiresAuth, setRequiresAuth] = useState(true);
   const [files, setFiles] = useState<FileNode[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>('');
@@ -109,6 +110,7 @@ const App: React.FC = () => {
     const initAuth = async () => {
         try {
             const status = await getAuthStatus();
+            setRequiresAuth(status.requiresAuth);
             if (!status.requiresAuth) {
                 setIsAuthenticated(true);
                 fetchFiles();
@@ -242,6 +244,12 @@ const App: React.FC = () => {
   const borderColor = isDarkMode ? 'rgba(253, 253, 253, 0.12)' : 'rgba(5, 5, 5, 0.06)';
   const siderStyle = isDarkMode ? { background: '#1f1f1f', borderRight: `1px solid ${borderColor}` } : { background: '#fcfcfc', borderRight: `1px solid ${borderColor}` };
 
+  const handleLogout = () => {
+      localStorage.removeItem('token');
+      setIsAuthenticated(false);
+      message.success('已退出登录');
+  };
+
   return (
     <ConfigProvider
       theme={{
@@ -273,6 +281,9 @@ const App: React.FC = () => {
                     isDarkMode={isDarkMode} 
                     borderColor={borderColor}
                     onMoveFile={handleMoveFile}
+                    onToggleTheme={toggleTheme}
+                    onLogout={handleLogout}
+                    requiresAuth={requiresAuth}
                 />
                 </Sider>
                 {siderVisible && (
@@ -314,6 +325,9 @@ const App: React.FC = () => {
                     isDarkMode={isDarkMode} 
                     borderColor={borderColor}
                     onMoveFile={handleMoveFile}
+                    onToggleTheme={toggleTheme}
+                    onLogout={handleLogout}
+                    requiresAuth={requiresAuth}
                   />
              </Drawer>
         )}
@@ -348,12 +362,7 @@ const App: React.FC = () => {
                     variant="borderless"
                     style={{ fontSize: '20px', fontWeight: 'bold', padding: 0, flex: 1, minWidth: 0, color: isDarkMode ? '#fff' : '#000' }}
                   />
-                  <Button 
-                    type="text" 
-                    icon={isDarkMode ? <BulbFilled style={{ color: '#FFC857' }} /> : <BulbOutlined />} 
-                    onClick={toggleTheme}
-                    style={{ marginLeft: '10px' }}
-                  />
+
               </div>
           )}
           {!selectedFile && (
@@ -363,11 +372,6 @@ const App: React.FC = () => {
                     icon={<MenuOutlined />}
                     onClick={() => setSiderVisible(!siderVisible)}
                     style={{ marginRight: 12 }}
-                />
-                <Button 
-                    type="text" 
-                    icon={isDarkMode ? <BulbFilled style={{ color: '#FFC857' }} /> : <BulbOutlined />} 
-                    onClick={toggleTheme}
                 />
              </div>
           )}

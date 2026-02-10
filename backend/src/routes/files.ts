@@ -298,4 +298,66 @@ router.post('/upload', upload.single('file'), (req, res) => {
     }
 });
 
+// GET /api/files/search - Search files
+router.get('/search', async (req, res) => {
+  try {
+    const q = req.query.q as string;
+    if (!q) return res.json([]);
+    
+    const query = q.toLowerCase();
+    const results: { key: string; title: string; matches: string[] }[] = [];
+    
+    // Recursive search
+    const searchDir = async (dir: string, relativePath: string = '') => {
+      const items = await fs.readdir(dir, { withFileTypes: true });
+      
+      for (const item of items) {
+        if (item.name.startsWith('.') || item.name === 'upload' || item.name === '_trash') continue;
+        
+        const itemRelativePath = path.join(relativePath, item.name);
+        const fullPath = path.join(dir, item.name);
+        
+        if (item.isDirectory()) {
+          await searchDir(fullPath, itemRelativePath);
+        } else if (item.isFile() && item.name.endsWith('.md')) {
+          let matches: string[] = [];
+          let isMatch = false;
+          
+          // Check filename
+          if (item.name.toLowerCase().includes(query)) {
+             isMatch = true;
+          }
+          
+          // Check content
+          const content = await fs.readFile(fullPath, 'utf-8');
+          const lowerContent = content.toLowerCase();
+          const index = lowerContent.indexOf(query);
+          
+          if (index > -1) {
+             isMatch = true;
+             // Extract context (e.g. 20 chars before and 50 after)
+             const start = Math.max(0, index - 20);
+             const end = Math.min(content.length, index + query.length + 50);
+             matches.push('...' + content.substring(start, end).replace(/\n/g, ' ') + '...');
+          }
+          
+          if (isMatch) {
+             results.push({
+                 key: itemRelativePath,
+                 title: item.name,
+                 matches: matches.length > 0 ? matches : [] // If only filename matches, matches is empty
+             });
+          }
+        }
+      }
+    };
+    
+    await searchDir(DATA_DIR);
+    res.json(results);
+    
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
 export default router;

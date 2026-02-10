@@ -92,3 +92,16 @@ export const uploadFile = async (file: File) => {
   });
   return response.data.url;
 };
+
+export interface SearchResult {
+  key: string;
+  title: string;
+  matches: string[];
+}
+
+export const searchFiles = async (query: string) => {
+  const response = await api.get<SearchResult[]>('/files/search', {
+    params: { q: query }
+  });
+  return response.data;
+};
