@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Dropdown, Modal, Input, message, Button, List, Empty, Spin, Tabs, Tag, Typography, Tooltip } from 'antd';
+import { Dropdown, Modal, Input, message, Button, List, Empty, Spin, Tabs, Tag, Typography, Tooltip, Space } from 'antd';
 import type { InputRef, MenuProps } from 'antd';
-import { SearchOutlined, FileMarkdownOutlined, BulbOutlined, LogoutOutlined, SunOutlined, MoonOutlined, CopyOutlined, CheckOutlined } from '@ant-design/icons';
+import { SearchOutlined, FileMarkdownOutlined, BulbOutlined, LogoutOutlined, SunOutlined, MoonOutlined, CopyOutlined, CheckOutlined, FolderAddOutlined, EllipsisOutlined } from '@ant-design/icons';
 import { createFile, deleteFile, renameFile, moveFile, updateFile, searchFiles } from '../api';
 import type { FileNode, SearchResult } from '../api';
 import FileTree from './FileTree/FileTree';
@@ -302,6 +302,11 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
           parentPath = selectedNode.isLeaf
             ? selectedNode.key.substring(0, selectedNode.key.lastIndexOf('/'))
             : selectedNode.key;
+        } else if (selectedPath) {
+          // Fallback to selectedPath if available
+          parentPath = selectedPath.endsWith('.md')
+            ? selectedPath.substring(0, selectedPath.lastIndexOf('/'))
+            : selectedPath;
         }
         const newPath = parentPath ? `${parentPath}/${inputValue}.md` : `${inputValue}.md`;
         await createFile(newPath, 'file');
@@ -313,6 +318,11 @@ const Sidebar: React.FC<SidebarProps> = ({ files, onSelect, onRefresh, isDarkMod
           parentPath = selectedNode.isLeaf
             ? selectedNode.key.substring(0, selectedNode.key.lastIndexOf('/'))
             : selectedNode.key;
+        } else if (selectedPath) {
+          // Fallback to selectedPath if available
+          parentPath = selectedPath.endsWith('.md')
+            ? selectedPath.substring(0, selectedPath.lastIndexOf('/'))
+            : selectedPath;
         }
         const newPath = parentPath ? `${parentPath}/${inputValue}` : inputValue;
         await createFile(newPath, 'folder');
@@ -536,6 +546,44 @@ Content-Type: application/json
           <img src="/logo.svg" alt="Logo" style={{ width: '32px', height: '32px', flexShrink: 0 }} />
           <span style={{ fontSize: '24px', letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis' }}>云简</span>
         </div>
+      </div>
+
+      <div style={{ padding: '12px 20px 0 20px', display: 'flex' }}>
+        <Space.Compact style={{ width: '100%' }}>
+          <Button
+            style={{ flex: 1 }}
+            onClick={() => {
+              setSelectedNode(null);
+              setModalType('createFile');
+              setInputValue('');
+              setModalVisible(true);
+            }}
+          >
+            新建笔记
+          </Button>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'newFolder',
+                  label: '新建文件夹',
+                  icon: <FolderAddOutlined />,
+                  onClick: () => {
+                    setSelectedNode(null);
+                    setModalType('createFolder');
+                    setInputValue('');
+                    setModalVisible(true);
+                  }
+                }
+              ]
+            }}
+            placement="bottomRight"
+          >
+            <Button
+              icon={<EllipsisOutlined />}
+            />
+          </Dropdown>
+        </Space.Compact>
       </div>
 
       <div style={{ flex: 1, overflow: 'hidden' }}>
